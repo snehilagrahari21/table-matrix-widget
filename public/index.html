@@ -1,12 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WidgetTemplate Widget — Dev Preview</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script src="app.js"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WidgetTemplate Widget — Dev Preview</title>
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined" />
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined"
+    media="print" onload="this.media='all'" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    media="print" onload="this.media='all'" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+    media="print" onload="this.media='all'" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Symbols+Outlined"
+    media="print" onload="this.media='all'" />
+  <!-- Preload Animate.css to fetch early but not block render -->
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@3.5.2/animate.min.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'">
+
+  <!-- Defer applying the stylesheet to prevent blocking render -->
+  <link rel="preload" as="style"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    media="print" onload="this.media='all'" />
+  <link rel="preload" as="style"
+    href="https://cdn.jsdelivr.net/npm/placeholder-loading/dist/css/placeholder-loading.min.css"
+    onload="this.onload=null;this.rel='stylesheet';" />
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highcharts@12.5.0/css/highcharts.min.css"> -->
+  <!--   Blocking (Fonts & Critical CSS Files)     -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="root"></div>
+  <script src="app.js"></script>
+</body>
+
 </html>

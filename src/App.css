@@ -17,7 +17,7 @@ body {
 }
 
 .app__config {
-  width: 35%;
+  width: 280px;
   flex-shrink: 0;
   background: var(--background-default-intense, #fff);
   border: var(--fds-border-default, 1px solid #e0e0e0);
