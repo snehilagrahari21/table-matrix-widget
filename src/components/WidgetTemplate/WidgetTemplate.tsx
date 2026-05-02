@@ -1,3 +1,4 @@
+import { Settings, Database } from 'react-feather';
 import { DataEntry, WidgetEvent, WidgetTemplateUIConfig } from '../../iosense-sdk/types';
 import './WidgetTemplate.css';
 
@@ -5,6 +6,11 @@ interface WidgetTemplateProps {
   config: WidgetTemplateUIConfig;
   data: DataEntry[];
   onEvent: (event: WidgetEvent) => void;
+}
+
+// TODO: implement this — return false when required config fields (e.g. a topic path) are not set.
+function isConfigured(_config: WidgetTemplateUIConfig): boolean {
+  return true;
 }
 
 // Read a bindable value: resolved data takes priority, config field is the fallback.
@@ -21,14 +27,33 @@ function getValueAtPath(obj: unknown, path: string): unknown {
     .reduce((acc: unknown, k) => (acc as Record<string, unknown>)?.[k], obj);
 }
 
+function NoConfigScreen() {
+  return (
+    <div className="widget-template widget-template__empty">
+      <Settings size={28} className="widget-template__empty-icon" />
+      <p className="widget-template__empty-title">Widget not configured</p>
+      <p className="widget-template__empty-subtitle">Open the settings panel to configure this widget.</p>
+    </div>
+  );
+}
+
+function NoDataScreen() {
+  return (
+    <div className="widget-template widget-template__empty">
+      <Database size={28} className="widget-template__empty-icon" />
+      <p className="widget-template__empty-title">No data available</p>
+      <p className="widget-template__empty-subtitle">The configured topic has not returned any data.</p>
+    </div>
+  );
+}
+
 export function WidgetTemplate({ config, data, onEvent }: WidgetTemplateProps) {
-  // Show skeleton while waiting for the mini-engine to resolve bindings.
+  if (!isConfigured(config)) {
+    return <NoConfigScreen />;
+  }
+
   if (data.length === 0) {
-    return (
-      <div className="widget-template widget-template--loading">
-        <div className="widget-template__skeleton" />
-      </div>
-    );
+    return <NoDataScreen />;
   }
 
   // TODO: replace with your widget's render logic.
