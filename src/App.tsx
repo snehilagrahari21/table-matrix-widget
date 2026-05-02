@@ -53,7 +53,7 @@ export default function App() {
   return (
     <div className="app">
       <div className="app__config">
-        <WidgetTemplateConfiguration envelope={envelope} authentication={auth} onChange={setEnvelope} />
+        <WidgetTemplateConfiguration config={envelope} authentication={auth} onChange={setEnvelope} />
       </div>
       <div className="app__widget">
         {envelope ? (

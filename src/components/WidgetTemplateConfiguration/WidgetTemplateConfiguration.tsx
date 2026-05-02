@@ -3,9 +3,9 @@ import { WidgetTemplateEnvelope, WidgetTemplateUIConfig } from '../../iosense-sd
 import './WidgetTemplateConfiguration.css';
 
 interface WidgetTemplateConfigurationProps {
-  envelope: WidgetTemplateEnvelope | undefined;
+  config: WidgetTemplateEnvelope | undefined;
   authentication?: string;
-  onChange: (envelope: WidgetTemplateEnvelope) => void;
+  onChange: (config: WidgetTemplateEnvelope) => void;
 }
 
 const VARIABLE_REGEX = /^\{\{(.+)\}\}$/;
@@ -49,20 +49,20 @@ function buildEnvelope(
 }
 
 export function WidgetTemplateConfiguration({
-  envelope,
+  config,
   authentication,
   onChange,
 }: WidgetTemplateConfigurationProps) {
   const [wrapInCard, setWrapInCard] = useState<boolean>(
-    envelope?.uiConfig.style.card.wrapInCard ?? true,
+    config?.uiConfig.style.card.wrapInCard ?? true,
   );
 
-  // Sync state when an existing envelope is loaded
+  // Sync state when an existing config is loaded
   useEffect(() => {
-    if (envelope) {
-      setWrapInCard(envelope.uiConfig.style.card.wrapInCard);
+    if (config) {
+      setWrapInCard(config.uiConfig.style.card.wrapInCard);
     }
-  }, [envelope?._id]);
+  }, [config?._id]);
 
   function emit(overrides?: Partial<{ wrapInCard: boolean }>) {
     const resolved = {
@@ -76,7 +76,7 @@ export function WidgetTemplateConfiguration({
       },
     };
 
-    onChange(buildEnvelope(envelope, uiConfig));
+    onChange(buildEnvelope(config, uiConfig));
   }
 
   return (
