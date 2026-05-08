@@ -76,15 +76,9 @@ props.onEvent({ type: "TIME_CHANGE", payload: { startTime, endTime, periodicity 
 
 ### getValue() — Always Use This for Bindable Fields
 
-```typescript
-function getValue(key: string, config: any, data: DataEntry[]): any {
-  const entry = data.find(d => d.key === key);
-  return entry !== undefined ? entry.value : getValueAtPath(config, key);
-}
-function getValueAtPath(obj: any, path: string): any {
-  return path.replace(/\[(\d+)\]/g, '.$1').split('.').reduce((acc, k) => acc?.[k], obj);
-}
+> Implementation: see **Bindable.md §5** — `getValue()` + `getValueAtPath()`.
 
+```typescript
 // Usage in widget
 const rawValue = getValue('variable', config, data);
 if (data.length === 0) return <WidgetSkeleton config={config} />;
@@ -119,7 +113,7 @@ interface TimeConfig {
   type: "local" | "fixed" | string;
   startTime: number | null;            // ms epoch, used when type = "fixed"
   endTime: number | null;
-  defaultDuration: string;             // ID reference → allDurations[n].id
+  defaultDurationId: string;             // ID reference → allDurations[n].id
   allDurations: Duration[];
   defaultPeriodicity: "minute" | "hourly" | "daily" | "weekly" | "monthly";
 }
@@ -217,18 +211,7 @@ The configurator produces the envelope. It must have:
 2. **Time Settings** → fills `timeConfig` (optional)
 3. **Appearance** → fills `uiConfig` (labels, styling)
 
-```typescript
-function buildEnvelope(existing, variable, sources, style): WidgetConfigEnvelope {
-  const uiConfig = { variable, sources, style };
-  return {
-    _id: existing?._id ?? `dp_${Date.now()}`,
-    type: 'DataPoint',
-    general: existing?.general ?? { title: '' },
-    uiConfig,
-    dynamicBindingPathList: buildDynamicBindingPathList(uiConfig), // scans for {{}} → extracts topics
-  };
-}
-```
+> Implementation: see `src/components/WidgetTemplateConfiguration/WidgetTemplateConfiguration.tsx` lines 38–49. Full contract in **Bindable.md §3**.
 
 `buildDynamicBindingPathList` walks `uiConfig`, finds every field matching `{{...}}`, and produces `{ key: dotPath, topic: contentInsideBraces }`. See Bindable.md for the full implementation.
 ```

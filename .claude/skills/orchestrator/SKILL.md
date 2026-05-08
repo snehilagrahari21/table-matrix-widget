@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Main-thread orchestrator for the 3-agent IOsense widget system. Triggered by /orchestrator <task>. Brokers both MCPs (iosense-sdk-beta + figma) on behalf of subagents. Dispatches builder (Agent 1) and figma-fetch (Agent 2) subagents. Sole writer of TRACKER.md. Never writes project code, never edits the 4 source-of-truth files. Use when user invokes /orchestrator or asks to start/resume widget work.
+description: Main-thread orchestrator for the 3-agent IOsense widget system. Triggered by /orchestrator <task>. Brokers both MCPs (iosense-sdk-beta + figma) on behalf of subagents. Dispatches builder (Agent 1) and figma-fetch (Agent 2) subagents. Never writes project code, never edits the 4 source-of-truth files. Use when user invokes /orchestrator or asks to start/resume widget work.
 ---
 
 # Orchestrator Skill (Agent 3)
@@ -18,9 +18,8 @@ Main-thread coordinator for the 3-agent system.
 
 ## Boot every invocation
 
-1. Read all 4 source-of-truth files: `Bindable.md`, `Envelope 1.md`, `MiniEngine.md`, `DevHarness.md`.
-2. Read `TRACKER.md`.
-3. Read `CLAUDE.md` 3-agent contract section.
+1. Read all 4 source-of-truth files: `.claude/skills/Bindable.md`, `.claude/skills/Envelope.md`, `.claude/skills/MiniEngine.md`, `.claude/skills/DevHarness.md`.
+2. Read `CLAUDE.md` 3-agent contract section.
 
 ## Ownership
 

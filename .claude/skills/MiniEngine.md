@@ -30,12 +30,7 @@ The widget receives two props:
 
 ## The DataEntry Contract
 
-```typescript
-interface DataEntry {
-  key: string;   // dot-path from dynamicBindingPathList e.g. "variable", "series[0].dataSource"
-  value: any;    // resolved value — scalar, array, object, whatever the API returned
-}
-```
+> Interface definition: see **Envelope.md §1b** — `DataEntry`.
 
 The `key` in `DataEntry` always matches exactly the `key` in `dynamicBindingPathList`.
 
@@ -80,58 +75,11 @@ Constants (defined in `api.ts`):
 
 ## resolve() Implementation
 
-```typescript
-import { resolveAndCompute } from './api';
-
-export async function resolve(
-  envelope: DataPointEnvelope,
-  ctx: MiniEngineCtx,
-): Promise<{ config: DataPointUIConfig; data: DataEntry[] }> {
-  const { startTime, endTime } = computeWindow(envelope, ctx.override);
-  const bindings = envelope.dynamicBindingPathList ?? [];
-
-  if (bindings.length === 0) return { config: envelope.uiConfig, data: [] };
-
-  try {
-    const items = await resolveAndCompute(
-      ctx.authentication,
-      bindings.map(({ key, topic }) => ({ key, topic })),
-      startTime,
-      endTime,
-    );
-    const data: DataEntry[] = items.map((item) => ({ key: item.key, value: item.value }));
-    return { config: envelope.uiConfig, data };
-  } catch {
-    return { config: envelope.uiConfig, data: [] };
-  }
-}
-```
+> See `src/iosense-sdk/mini-engine.ts` lines 9–30.
 
 ### resolveAndCompute in api.ts
 
-```typescript
-const GRAPH = 'iosense_test_uns';
-const STAGING_BASE = 'https://stagingsv.iosense.io/api';
-
-export async function resolveAndCompute(
-  authentication: string,
-  config: Array<{ key: string; topic: string }>,
-  startTime: number,
-  endTime: number,
-): Promise<Array<{ key: string; value: string | number | null }>> {
-  const res = await fetch(`${STAGING_BASE}/account/uns/resolveAndCompute`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${authentication}`,
-    },
-    body: JSON.stringify({ graph: GRAPH, config, startTime, endTime }),
-  });
-  const json = await res.json();
-  // Response shape: { success, data: [{ key, value }] }
-  return (json?.data ?? []) as Array<{ key: string; value: string | number | null }>;
-}
-```
+> See `src/iosense-sdk/api.ts` lines 14–30.
 
 ---
 
@@ -157,23 +105,9 @@ data = [{ key: "variable", value: "436" }]
 
 ## computeWindow Helper
 
-```typescript
-function computeWindow(
-  envelope: DataPointEnvelope,
-  override?: { startTime: number; endTime: number },
-): { startTime: number; endTime: number } {
-  if (override) return { startTime: override.startTime, endTime: override.endTime };
-  const { timeConfig } = envelope;
-  if (!timeConfig) return { startTime: Date.now() - 86_400_000, endTime: Date.now() };
-  if (timeConfig.type === 'fixed' && timeConfig.startTime && timeConfig.endTime) {
-    return { startTime: timeConfig.startTime, endTime: timeConfig.endTime };
-  }
-  const now = Date.now();
-  const dur = timeConfig.allDurations?.find(d => d.id === timeConfig.defaultDuration);
-  if (dur) return { startTime: computePresetStart(dur, now), endTime: now };
-  return { startTime: now - 86_400_000, endTime: now };
-}
-```
+> See `src/iosense-sdk/mini-engine.ts` lines 32–46.
+
+Priority order: `override` → `fixed` timeConfig → `defaultDuration` preset → default 24 h window.
 
 ---
 
@@ -189,14 +123,7 @@ const { config, data } = await resolve(envelope, { authentication: token });
 // data   — DataEntry[] with resolved values e.g. [{ key: "variable", value: "436" }]
 ```
 
-Widget reads all bindable values via `getValue()` — never directly from `config`:
-
-```typescript
-function getValue(key: string, config: any, data: DataEntry[]): any {
-  const entry = data.find(d => d.key === key);
-  return entry !== undefined ? entry.value : getValueAtPath(config, key);
-}
-```
+Widget reads all bindable values via `getValue()` — never directly from `config`. See **Bindable.md §5**.
 
 ---
 

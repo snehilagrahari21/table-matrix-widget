@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "webpack serve --mode development",
-    "build:bundle": "webpack --mode production"
+    "build:bundle": "webpack --mode production",
+    "deploy:review": "node scripts/pre-deploy-review.js",
+    "deploy": "claude /deploy-review"
   },
   "dependencies": {
     "@faclon-labs/design-sdk": "latest",

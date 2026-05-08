@@ -4,10 +4,10 @@ Read the four skill files below **before touching any widget code**. They are th
 
 | Skill file | What it covers |
 |---|---|
-| `Envelope.md` | Widget/configurator/mini-engine contract, envelope shape, DO/DON'T checklist |
-| `Bindable.md` | How `{{topic}}` bindings work, `buildDynamicBindingPathList` implementation |
-| `MiniEngine.md` | `resolve()` data pipeline, `resolveAndCompute` API, DataEntry contract |
-| `DevHarness.md` | `App.tsx` wiring, auth flow, console logs to expect |
+| `.claude/skills/Envelope.md` | Widget/configurator/mini-engine contract, envelope shape, DO/DON'T checklist |
+| `.claude/skills/Bindable.md` | How `{{topic}}` bindings work, `buildDynamicBindingPathList` implementation |
+| `.claude/skills/MiniEngine.md` | `resolve()` data pipeline, `resolveAndCompute` API, DataEntry contract |
+| `.claude/skills/DevHarness.md` | `App.tsx` wiring, auth flow, console logs to expect |
 
 ---
 
