@@ -95,7 +95,7 @@ interface WidgetConfigEnvelope {
   _id: string;
   type: string;                  // Widget type e.g. "DataPoint"
   general: { title: string };
-  timeConfig?: TimeConfig;       // Optional — time window settings
+  timeConfig?: TimeTabUIConfig;  // Optional — time window settings (from TimeConfiguration component)
   uiConfig: UIConfig;            // Render config — widget reads this
   dynamicBindingPathList: Array<{ key: string; topic: string }>; // binding index
 }
@@ -107,22 +107,64 @@ interface WidgetConfigEnvelope {
 
 Used by the mini-engine to compute `startTime`/`endTime` for the `resolveAndCompute` call.
 
+**This object is produced automatically by the `TimeConfiguration` component from `@faclon-labs/design-sdk`.** Never hand-construct it — mount `<TimeConfiguration />` in the configurator and it emits the correct shape via its `onChange` callback.
+
 ```typescript
-interface TimeConfig {
-  timezone: string;                    // IANA e.g. "Asia/Kolkata"
-  type: "local" | "fixed" | string;
-  startTime: number | null;            // ms epoch, used when type = "fixed"
-  endTime: number | null;
-  defaultDurationId: string;             // ID reference → allDurations[n].id
-  allDurations: Duration[];
-  defaultPeriodicity: "minute" | "hourly" | "daily" | "weekly" | "monthly";
+export interface GTPPreset {
+  id: string;
+  label: string;
+  x?: number;
+  xPeriod?: 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
+  calendarType?: 'today' | 'yesterday' | 'current_week' | 'previous_week' | 'current_month' | 'previous_month';
+  isBuiltIn?: boolean;
+  navigation?: string;
+  xEvent?: string;
+  y?: number;
+  yPeriod?: 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
+  yEvent?: string;
+  periodicities?: string[];
 }
 
-interface Duration {
+export interface GTPShift {
   id: string;
-  label?: string;
-  x?: number;
-  xPeriod: string;   // "minute" | "hour" | "day" | "week" | "month" | "year"
+  name: string;
+  startTime: string;
+  endTime: string;
+  color: string;
+}
+
+export interface GTPCycleTimeConfig {
+  identifier: 'start' | 'end';
+  hour: string;
+  minute: string;
+  dayOfWeek: number | null;
+  date: string;
+  month: string;
+  year: string;
+}
+
+export type GTPTimeType = 'fixed' | 'local' | 'global';
+
+export interface GTPGlobalTimepicker {
+  id: string;
+  name: string;
+}
+
+// This is the shape stored in envelope.timeConfig
+export interface TimeTabUIConfig {
+  timezone: string;                    // IANA e.g. "Asia/Kolkata"
+  timeType?: GTPTimeType;
+  globalTimepickerId?: string;
+  defaultDurationId: string;           // ID reference → allDurations[n].id
+  allDurations: GTPPreset[];
+  defaultPeriodicity: 'minute' | 'hourly' | 'daily' | 'weekly' | 'monthly';
+  disablePeriodicities?: boolean;
+  comparisonMode?: boolean;
+  disableTimeSelection?: boolean;
+  futureDaysAllowed?: string;
+  shifts?: GTPShift[];
+  shiftAggregator?: string;
+  cycleTime?: GTPCycleTimeConfig;
 }
 ```
 
