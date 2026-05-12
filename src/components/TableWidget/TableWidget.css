@@ -1,0 +1,40 @@
+.tw-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--background-default-intense, #fff);
+  border-radius: var(--global-border-radius-large, 8px);
+  border: 1px solid var(--fds-border-subtle, #eee);
+  overflow: hidden;
+}
+
+.tw-header {
+  padding: var(--spacing-04, 12px) var(--spacing-05, 16px) 0;
+}
+
+.tw-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-default-primary, #1a1a1a);
+  line-height: 1.4;
+}
+
+.tw-toolbar {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-03, 8px) var(--spacing-05, 16px);
+  gap: var(--spacing-03, 8px);
+}
+
+.tw-toolbar-spacer {
+  flex: 1;
+}
+
+.tw-table-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: 1px solid var(--fds-border-subtle, #eee);
+}

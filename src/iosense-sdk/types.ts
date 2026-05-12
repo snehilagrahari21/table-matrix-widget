@@ -7,7 +7,7 @@ export interface Duration {
   id: string;
   label?: string;
   x?: number;
-  xPeriod: string; // "minute" | "hour" | "day" | "week" | "month" | "year"
+  xPeriod: string;
 }
 
 export interface TimeConfig {
@@ -24,26 +24,60 @@ export type WidgetEvent =
   | { type: 'TIME_CHANGE'; payload: { startTime: string; endTime: string; periodicity: string } }
   | { type: 'FILTER_CHANGE'; payload: Record<string, unknown> };
 
-// ---------------------------------------------------------------------------
-// WidgetTemplate — replace with your widget's config shape after init-widget.sh
-// ---------------------------------------------------------------------------
+export type TextAlign = 'left' | 'center' | 'right';
+export type NumberFormat = 'general' | 'number' | 'percent' | 'currency' | 'integer';
+export type BorderStyle = 'solid' | 'dashed' | 'dotted';
+export type BorderWidth = 1 | 2 | 3;
 
-export interface WidgetTemplateUIConfig {
-  // Add your widget's render config fields here.
-  // Example:
-  //   title: string;
-  //   variable: string;       // bindable — user types {{topic}}
-  //   style: { card: { wrapInCard: boolean; bg: string } };
+export interface CellBorderSide {
+  enabled: boolean;
+  color: string;        // CSS hex, default '#cccccc'
+  style: BorderStyle;   // default 'solid'
+  width: BorderWidth;   // default 1
+}
+
+export interface CellBorders {
+  top: CellBorderSide;
+  right: CellBorderSide;
+  bottom: CellBorderSide;
+  left: CellBorderSide;
+}
+
+export interface CellFormat {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  fontSize: number;           // default 13
+  textAlign: TextAlign;       // default 'left'
+  numberFormat: NumberFormat; // default 'general'
+  textColor: string;          // CSS hex or '' (inherits)
+  cellColor: string;          // CSS hex or '' (transparent)
+  borders: CellBorders;
+}
+
+export interface CellData {
+  value: string;
+  format: CellFormat;
+}
+
+export interface TableWidgetUIConfig {
+  title: string;
+  rows: number;
+  columns: number;
+  freezeRows: number;
+  freezeColumns: number;
+  widgetWidth: number;
+  widgetHeight: number;
   style: {
     card: { wrapInCard: boolean; bg: string };
   };
 }
 
-export interface WidgetTemplateEnvelope {
+export interface TableWidgetEnvelope {
   _id: string;
-  type: 'WidgetTemplate';
+  type: 'TableWidget';
   general: { title: string };
   timeConfig?: TimeConfig;
-  uiConfig: WidgetTemplateUIConfig;
+  uiConfig: TableWidgetUIConfig;
   dynamicBindingPathList: Array<{ key: string; topic: string }>;
 }

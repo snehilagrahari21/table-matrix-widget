@@ -1,4 +1,4 @@
-import { WidgetTemplateEnvelope, WidgetTemplateUIConfig, DataEntry, Duration } from './types';
+import { TableWidgetEnvelope, TableWidgetUIConfig, DataEntry, Duration } from './types';
 import { resolveAndCompute } from './api';
 
 interface MiniEngineCtx {
@@ -7,9 +7,9 @@ interface MiniEngineCtx {
 }
 
 export async function resolve(
-  envelope: WidgetTemplateEnvelope,
+  envelope: TableWidgetEnvelope,
   ctx: MiniEngineCtx,
-): Promise<{ config: WidgetTemplateUIConfig; data: DataEntry[] }> {
+): Promise<{ config: TableWidgetUIConfig; data: DataEntry[] }> {
   const { startTime, endTime } = computeWindow(envelope, ctx.override);
   const bindings = envelope.dynamicBindingPathList ?? [];
 
@@ -30,7 +30,7 @@ export async function resolve(
 }
 
 function computeWindow(
-  envelope: WidgetTemplateEnvelope,
+  envelope: TableWidgetEnvelope,
   override?: { startTime: number; endTime: number },
 ): { startTime: number; endTime: number } {
   if (override) return override;

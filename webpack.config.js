@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const COMPONENTS = {
-  WidgetTemplate: './src/components/WidgetTemplate/index.ts',
-  WidgetTemplateConfiguration: './src/components/WidgetTemplateConfiguration/index.ts',
+  TableWidget: './src/components/TableWidget/index.ts',
+  TableWidgetConfiguration: './src/components/TableWidgetConfiguration/index.ts',
 };
 
 export default (env, argv) => {
@@ -35,6 +35,10 @@ export default (env, argv) => {
     resolve: { extensions: ['.tsx', '.ts', '.js'] },
     module: {
       rules: [
+        {
+          test: /\.m?js$/,
+          resolve: { fullySpecified: false },
+        },
         {
           test: /\.(ts|tsx)$/,
           exclude: /node_modules/,

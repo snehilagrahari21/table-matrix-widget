@@ -20,7 +20,7 @@ body {
   width: 280px;
   flex-shrink: 0;
   background: var(--background-default-intense, #fff);
-  border: var(--fds-border-default, 1px solid #e0e0e0);
+  border: 1px solid var(--fds-border-default, #e0e0e0);
   border-radius: var(--global-border-radius-large, 8px);
   overflow: hidden;
 }
@@ -37,7 +37,7 @@ body {
   justify-content: center;
   height: 100%;
   color: var(--text-default-secondary, #666);
-  border: var(--fds-border-subtle, 1px solid #eee);
+  border: 1px solid var(--fds-border-subtle, #eee);
   border-radius: var(--global-border-radius-large, 8px);
   background: var(--background-default-intense, #fff);
 }

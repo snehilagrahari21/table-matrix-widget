@@ -1,0 +1,521 @@
+/* ── Root ── */
+.vg-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Toolbar ── */
+.vg-toolbar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--spacing-01, 2px);
+  padding: var(--spacing-02, 4px) var(--spacing-04, 12px);
+  height: 44px;
+  border-bottom: 1px solid var(--fds-border-subtle, #eee);
+  background: var(--background-default-intense, #fff);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Hide scrollbar on toolbar */
+.vg-toolbar::-webkit-scrollbar { display: none; }
+.vg-toolbar { scrollbar-width: none; }
+
+/* Toolbar hidden state — preserves height to prevent grid layout shift */
+.vg-toolbar--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.vg-divider {
+  flex-shrink: 0;
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: var(--fds-border-subtle, #e0e0e0);
+  margin: 0 var(--spacing-02, 4px);
+}
+
+/* ── Font size input ── */
+.vg-font-size-input {
+  width: 44px;
+  height: 28px;
+  padding: 0 var(--spacing-02, 4px);
+  border: 1px solid var(--fds-border-subtle, #ddd);
+  border-radius: var(--global-border-radius-medium, 4px);
+  font-size: 13px;
+  text-align: center;
+  color: var(--text-default-primary, #1a1a1a);
+  background: var(--background-default-intense, #fff);
+  outline: none;
+  flex-shrink: 0;
+  -moz-appearance: textfield;
+}
+.vg-font-size-input::-webkit-inner-spin-button,
+.vg-font-size-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.vg-font-size-input:focus {
+  border-color: var(--background-brand-default, #0073ea);
+  box-shadow: 0 0 0 2px rgba(0,115,234,0.15);
+}
+
+/* ── Color trigger buttons ── */
+.vg-color-trigger {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 28px;
+  height: 28px;
+  padding: 5px 5px 4px;
+  border-radius: var(--global-border-radius-medium, 4px);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  color: var(--text-default-primary, #1a1a1a);
+  transition: background 0.1s, border-color 0.1s;
+}
+.vg-color-trigger:hover {
+  background: var(--background-gray-hover-light, #f0f0f0);
+  border-color: var(--fds-border-subtle, #ddd);
+}
+
+/* Colored bar below the icon (shows current color) */
+.vg-color-trigger__bar {
+  display: block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Wide color trigger — used inside border panel */
+.vg-color-trigger--wide {
+  flex-direction: row;
+  width: auto;
+  gap: var(--spacing-02, 4px);
+  padding: var(--spacing-02, 4px) var(--spacing-03, 8px);
+  height: 32px;
+  border-color: var(--fds-border-subtle, #ddd);
+}
+.vg-color-trigger__swatch-wide {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--fds-border-subtle, #ddd);
+  flex-shrink: 0;
+}
+.vg-color-trigger__hex {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--text-default-secondary, #555);
+}
+
+/* ── Border panel (inside Popover) ── */
+.vg-border-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-03, 8px);
+  padding: var(--spacing-02, 4px);
+  min-width: 200px;
+}
+
+.vg-border-panel__label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-default-tertiary, #aaa);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.vg-border-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-02, 4px);
+}
+
+/* ── Visual cell border diagram ── */
+.vg-border-diagram {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  background: var(--background-default-subtle, #f5f5f5);
+  border-radius: var(--global-border-radius-medium, 4px);
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+/* The inner cell preview */
+.vg-border-diagram__cell {
+  position: absolute;
+  inset: 22px;
+  background: var(--background-default-intense, #fff);
+  border: 1px solid var(--fds-border-subtle, #eee);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Shared side styles */
+.vg-border-diagram__top,
+.vg-border-diagram__bottom {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  height: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--fds-border-default, #ccc);
+  transition: background 0.12s, transform 0.1s;
+}
+.vg-border-diagram__left,
+.vg-border-diagram__right {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  width: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--fds-border-default, #ccc);
+  transition: background 0.12s, transform 0.1s;
+}
+
+.vg-border-diagram__top    { top: 8px; }
+.vg-border-diagram__bottom { bottom: 8px; }
+.vg-border-diagram__left   { left: 8px; }
+.vg-border-diagram__right  { right: 8px; }
+
+/* Active = brand blue */
+[data-active="true"].vg-border-diagram__top,
+[data-active="true"].vg-border-diagram__bottom,
+[data-active="true"].vg-border-diagram__left,
+[data-active="true"].vg-border-diagram__right {
+  background: var(--background-brand-default, #0073ea);
+}
+/* Hover */
+.vg-border-diagram__top:hover,
+.vg-border-diagram__bottom:hover,
+.vg-border-diagram__left:hover,
+.vg-border-diagram__right:hover {
+  background: var(--text-default-secondary, #444);
+  transform: scale(1.15);
+}
+[data-active="true"].vg-border-diagram__top:hover,
+[data-active="true"].vg-border-diagram__bottom:hover,
+[data-active="true"].vg-border-diagram__left:hover,
+[data-active="true"].vg-border-diagram__right:hover {
+  background: var(--background-brand-default, #0073ea);
+  opacity: 0.75;
+}
+
+/* ── Border style / width visual buttons ── */
+.vg-border-style-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 28px;
+  border-radius: var(--global-border-radius-medium, 4px);
+  border: 1px solid var(--fds-border-subtle, #ddd);
+  cursor: pointer;
+  background: var(--background-default-intense, #fff);
+  transition: background 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+}
+.vg-border-style-btn:hover {
+  background: var(--background-gray-hover-light, #f0f0f0);
+  border-color: var(--fds-border-default, #bbb);
+}
+.vg-border-style-btn--active {
+  background: var(--background-info-secondary, #e8f4fd);
+  border-color: var(--background-brand-default, #0073ea);
+}
+.vg-border-style-btn__line {
+  width: 36px;
+  border-top-color: var(--text-default-primary, #1a1a1a);
+  border-top-width: 1px; /* overridden inline for width buttons */
+  border-top-style: solid; /* overridden inline for style buttons */
+}
+.vg-border-style-btn--active .vg-border-style-btn__line {
+  border-top-color: var(--background-brand-default, #0073ea);
+}
+
+/* ── Formula bar ── */
+.vg-formula-bar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 28px;
+  border-bottom: 1px solid var(--fds-border-subtle, #eee);
+  background: var(--background-default-intense, #fff);
+  font-size: 12px;
+}
+
+.vg-formula-bar__name {
+  width: 64px;
+  flex-shrink: 0;
+  padding: 0 var(--spacing-03, 8px);
+  font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--background-brand-default, #0073ea);
+  background: var(--background-info-secondary, #e8f4fd);
+  border-right: 1px solid var(--fds-border-subtle, #eee);
+}
+
+.vg-formula-bar__fx {
+  padding: 0 var(--spacing-03, 8px);
+  color: var(--text-default-tertiary, #999);
+  font-style: italic;
+  font-size: 13px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--fds-border-subtle, #eee);
+}
+
+.vg-formula-bar__content {
+  flex: 1;
+  padding: 0 var(--spacing-03, 8px);
+  font-family: monospace;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-default-primary, #1a1a1a);
+}
+
+.vg-formula-bar__content--picking {
+  color: var(--text-default-tertiary, #999);
+  font-style: italic;
+  font-family: inherit;
+}
+
+/* ── Formula-referenced cell highlight ── */
+.vg-cell--formula-ref {
+  background: var(--background-info-secondary, #e8f4fd) !important;
+  outline: 2px solid var(--background-brand-default, #0073ea);
+  outline-offset: -2px;
+}
+
+/* ── Scrollable grid wrapper ── */
+.vg-grid-wrap {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  outline: none;
+}
+
+/* ── CSS Grid ── */
+.vg-grid {
+  display: grid;
+  width: max-content;
+}
+
+/* ── Base cell ── */
+.vg-cell {
+  height: 32px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border-gray-default, #c4c4c4);
+  border-bottom: 1px solid var(--border-gray-default, #c4c4c4);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ── Header row cells ── */
+.vg-header-cell {
+  background: var(--background-default-subtle, #f5f5f5);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-default-secondary, #666);
+  justify-content: center;
+  border-bottom: 2px solid var(--fds-border-default, #bbb);
+  cursor: pointer;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  user-select: none;
+  overflow: visible;
+}
+
+.vg-header-cell:hover {
+  background: var(--background-gray-hover-light, #eaeaea);
+}
+
+/* ── Corner cell ── */
+.vg-corner-cell {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  border-right: 2px solid var(--fds-border-default, #bbb);
+}
+
+/* ── Row number cells ── */
+.vg-rownum-cell {
+  background: var(--background-default-subtle, #f5f5f5);
+  font-size: 11px;
+  color: var(--text-default-tertiary, #aaa);
+  justify-content: center;
+  border-right: 2px solid var(--fds-border-default, #bbb);
+  cursor: pointer;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  user-select: none;
+  overflow: visible;
+}
+
+.vg-rownum-cell:hover {
+  background: var(--background-gray-hover-light, #eaeaea);
+}
+
+/* ── Data cells ── */
+.vg-data-cell {
+  display: block;
+  line-height: 32px;
+  padding: 0 var(--spacing-02, 4px);
+  background: var(--background-default-intense, #fff);
+  cursor: text;
+  user-select: text;
+  outline: none;
+}
+.vg-data-cell:focus {
+  box-shadow: inset 0 0 0 2px var(--background-brand-default, #0073ea);
+  z-index: 4;
+  position: relative;
+}
+
+/* ── Selected state ── */
+.vg-cell--selected {
+  background: var(--background-info-secondary, #e8f4fd) !important;
+}
+.vg-cell--selected:focus {
+  box-shadow: inset 0 0 0 2px var(--background-info-default, #0078d4);
+}
+
+/* ── Frozen row / column ── */
+.vg-cell--frozen-row { border-bottom-color: var(--fds-border-default, #bbb); }
+.vg-cell--frozen-col { border-right-color:  var(--fds-border-default, #bbb); }
+
+/* Constrain ColorPicker width to fit inside Popover */
+.vg-color-picker-wrap {
+  width: 224px;
+  overflow: hidden;
+}
+
+/* ── Resize handles ── */
+.vg-resize-handle--col {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.vg-resize-handle--row {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  cursor: row-resize;
+  z-index: 10;
+}
+
+.vg-resize-handle--col:hover::after,
+.vg-resize-handle--row:hover::after {
+  content: '';
+  display: block;
+  position: absolute;
+  background: var(--background-brand-default, #0073ea);
+  opacity: 0.5;
+  border-radius: 2px;
+}
+
+.vg-resize-handle--col:hover::after {
+  right: 1px;
+  top: 15%;
+  width: 2px;
+  height: 70%;
+}
+
+.vg-resize-handle--row:hover::after {
+  bottom: 1px;
+  left: 15%;
+  height: 2px;
+  width: 70%;
+}
+
+/* ── Number format select in toolbar ── */
+.vg-numfmt-select {
+  height: 28px;
+  padding: 0 var(--spacing-02, 4px);
+  border: 1px solid var(--fds-border-subtle, #ddd);
+  border-radius: var(--global-border-radius-medium, 4px);
+  font-size: 12px;
+  color: var(--text-default-primary, #1a1a1a);
+  background: var(--background-default-intense, #fff);
+  cursor: pointer;
+  flex-shrink: 0;
+  outline: none;
+  min-width: 80px;
+}
+.vg-numfmt-select:focus {
+  border-color: var(--background-brand-default, #0073ea);
+}
+
+/* ── Context menu ── */
+.vg-context-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 190px;
+  background: var(--background-default-intense, #fff);
+  border: 1px solid var(--fds-border-subtle, #ddd);
+  border-radius: var(--global-border-radius-medium, 6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 4px 0;
+  overflow: hidden;
+}
+
+.vg-context-menu__item {
+  display: block;
+  width: 100%;
+  padding: 6px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-default-primary, #1a1a1a);
+  white-space: nowrap;
+}
+
+.vg-context-menu__item:hover {
+  background: var(--background-gray-hover-light, #f0f0f0);
+}
+
+.vg-context-menu__item--danger {
+  color: var(--text-danger-default, #d93025);
+}
+
+.vg-context-menu__item--danger:hover {
+  background: var(--background-danger-secondary, #fdecea);
+}
+
+.vg-context-menu__sep {
+  height: 1px;
+  background: var(--fds-border-subtle, #eee);
+  margin: 3px 0;
+}
