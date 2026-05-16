@@ -1,4 +1,4 @@
-import { NumberFormat } from '../../iosense-sdk/types';
+import { NumberFormat, ConditionalRule, ConditionalRuleFormat, ConditionalRuleRange } from '../../iosense-sdk/types';
 import { CellDataStore, CellId } from './CellDataStore';
 
 // ── Number formatting ──────────────────────────────────────────────────────
@@ -17,6 +17,75 @@ export function applyNumberFormat(value: string, format: NumberFormat): string {
     case 'integer':
       return Math.round(num).toLocaleString('en-US');
   }
+}
+
+// ── Conditional formatting ─────────────────────────────────────────────────
+
+function parseRef(ref: string): { row: number; col: number } | null {
+  const m = /^([A-Z]+)(\d+)$/i.exec(ref.trim());
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { row: parseInt(m[2], 10) - 1, col: col - 1 };
+}
+
+export function parseRangeString(rangeStr: string): ConditionalRuleRange | null {
+  const s = rangeStr.trim();
+  if (!s) return null;
+  const parts = s.split(':');
+  const start = parseRef(parts[0]);
+  if (!start) return null;
+  const end = parts[1] ? parseRef(parts[1]) : start;
+  if (!end) return null;
+  return {
+    startRow: Math.min(start.row, end.row),
+    startCol: Math.min(start.col, end.col),
+    endRow:   Math.max(start.row, end.row),
+    endCol:   Math.max(start.col, end.col),
+  };
+}
+
+function matchesCondition(displayValue: string, rule: ConditionalRule): boolean {
+  const { condition, value1, value2 } = rule;
+  if (condition === 'isEmpty')    return displayValue.trim() === '';
+  if (condition === 'isNotEmpty') return displayValue.trim() !== '';
+  if (condition === 'contains')   return displayValue.includes(value1);
+  const num  = parseFloat(displayValue);
+  const thr1 = parseFloat(value1);
+  if (isNaN(num) || isNaN(thr1)) {
+    if (condition === 'equalTo')    return displayValue === value1;
+    if (condition === 'notEqualTo') return displayValue !== value1;
+    return false;
+  }
+  switch (condition) {
+    case 'greaterThan':         return num > thr1;
+    case 'lessThan':            return num < thr1;
+    case 'greaterThanOrEqual':  return num >= thr1;
+    case 'lessThanOrEqual':     return num <= thr1;
+    case 'equalTo':             return num === thr1;
+    case 'notEqualTo':          return num !== thr1;
+    case 'between':             return num >= thr1 && num <= parseFloat(value2);
+  }
+}
+
+export function evaluateConditionalRules(
+  displayValue: string,
+  rules: ConditionalRule[],
+  row: number,
+  col: number,
+): ConditionalRuleFormat {
+  let patch: ConditionalRuleFormat = {};
+  for (const rule of rules) {
+    if (!rule.enabled) continue;
+    if (rule.range !== null) {
+      const { startRow, startCol, endRow, endCol } = rule.range;
+      if (row < startRow || row > endRow || col < startCol || col > endCol) continue;
+    }
+    if (matchesCondition(displayValue, rule)) {
+      patch = Object.assign({}, patch, rule.format);
+    }
+  }
+  return patch;
 }
 
 // ── Formula display ────────────────────────────────────────────────────────

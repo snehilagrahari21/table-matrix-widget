@@ -28,6 +28,7 @@ export type TextAlign = 'left' | 'center' | 'right';
 export type NumberFormat = 'general' | 'number' | 'percent' | 'currency' | 'integer';
 export type BorderStyle = 'solid' | 'dashed' | 'dotted';
 export type BorderWidth = 1 | 2 | 3;
+export type TableBorderStyle = 'none' | 'all' | 'rows' | 'columns';
 
 export interface CellBorderSide {
   enabled: boolean;
@@ -60,6 +61,50 @@ export interface CellData {
   format: CellFormat;
 }
 
+export type ConditionalRuleCondition =
+  | 'greaterThan' | 'lessThan' | 'greaterThanOrEqual' | 'lessThanOrEqual'
+  | 'equalTo' | 'notEqualTo' | 'between'
+  | 'contains' | 'isEmpty' | 'isNotEmpty';
+
+export interface ConditionalRuleRange {
+  startRow: number; startCol: number;
+  endRow: number;   endCol: number;
+}
+
+export interface ConditionalRuleFormat {
+  cellColor?: string;
+  textColor?: string;
+  bold?: boolean;
+  italic?: boolean;
+}
+
+export interface ConditionalRule {
+  id: string;
+  enabled: boolean;
+  range: ConditionalRuleRange | null; // null = all cells
+  condition: ConditionalRuleCondition;
+  value1: string;
+  value2: string;
+  format: ConditionalRuleFormat;
+}
+
+export interface TableWidgetCardStyle {
+  wrapInCard: boolean;
+  bg: string;
+  borderColor: string;
+  borderWidth: number;   // 1 | 2 | 3
+  borderRadius: number;  // px
+  padding: number;       // px
+}
+
+export type TitleFontWeight = 'regular' | 'medium' | 'bold';
+
+export interface TableWidgetTitleStyle {
+  color: string;
+  fontSize: number;
+  fontWeight: TitleFontWeight;
+}
+
 export interface TableWidgetUIConfig {
   title: string;
   rows: number;
@@ -68,8 +113,13 @@ export interface TableWidgetUIConfig {
   freezeColumns: number;
   widgetWidth: number;
   widgetHeight: number;
+  locked: boolean;
+  conditionalRules: ConditionalRule[];
   style: {
-    card: { wrapInCard: boolean; bg: string };
+    card: TableWidgetCardStyle;
+    title: TableWidgetTitleStyle;
+    tableBorderStyle: TableBorderStyle;
+    showExportButton: boolean;
   };
 }
 

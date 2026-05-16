@@ -3,13 +3,16 @@
   flex-direction: column;
   height: 100%;
   background: var(--background-default-intense, #fff);
-  border-radius: var(--global-border-radius-large, 8px);
   border: 1px solid var(--fds-border-subtle, #eee);
   overflow: hidden;
 }
 
-.tw-header {
-  padding: var(--spacing-04, 12px) var(--spacing-05, 16px) 0;
+.tw-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-03, 8px) 0;
+  flex-shrink: 0;
 }
 
 .tw-title {
@@ -20,15 +23,8 @@
   line-height: 1.4;
 }
 
-.tw-toolbar {
-  display: flex;
-  align-items: center;
-  padding: var(--spacing-03, 8px) var(--spacing-05, 16px);
-  gap: var(--spacing-03, 8px);
-}
-
-.tw-toolbar-spacer {
-  flex: 1;
+.tw-topbar__actions {
+  margin-left: auto;
 }
 
 .tw-table-section {

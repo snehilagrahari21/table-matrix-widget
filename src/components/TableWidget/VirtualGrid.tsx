@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Button, ColorPicker, Popover, PopoverHeader, PopoverBody } from '@faclon-labs/design-sdk';
+import { Button, Popover, PopoverHeader, PopoverBody } from '@faclon-labs/design-sdk';
+import { CompactColorPicker } from './CompactColorPicker';
 import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Grid, Droplet, Type } from 'react-feather';
 import { CellDataStore, CellId } from './CellDataStore';
-import { getDisplayValue, applyNumberFormat } from './formulaEngine';
-import { CellFormat, CellBorders, CellBorderSide, BorderStyle, BorderWidth, TextAlign, NumberFormat } from '../../iosense-sdk/types';
+import { getDisplayValue, applyNumberFormat, evaluateConditionalRules } from './formulaEngine';
+import { CellFormat, CellBorders, CellBorderSide, BorderStyle, BorderWidth, TextAlign, NumberFormat, ConditionalRule, TableBorderStyle } from '../../iosense-sdk/types';
 import './VirtualGrid.css';
 
 const ROW_HEIGHT = 32;
@@ -19,6 +20,9 @@ interface VirtualGridProps {
   freezeRows: number;
   freezeColumns: number;
   store: CellDataStore;
+  conditionalRules: ConditionalRule[];
+  locked?: boolean;
+  tableBorderStyle?: TableBorderStyle;
 }
 
 interface ContextMenuState {
@@ -117,6 +121,7 @@ function stickyStyle(
   fc: number,
   cw: number[],
   rh: number[],
+  headersVisible: boolean = true,
 ): React.CSSProperties {
   const isFrozenRow = dataRow >= 0 && dataRow < fr;
   const isFrozenCol = dataCol >= 0 && dataCol < fc;
@@ -127,17 +132,31 @@ function stickyStyle(
   if (isHeaderRow) {
     style.top = 0;
   } else if (isFrozenRow) {
-    style.top = ROW_HEIGHT + rh.slice(0, dataRow).reduce((a, b) => a + b, 0);
+    // When headers are hidden there is no header row consuming space at top
+    const headerOffset = headersVisible ? ROW_HEIGHT : 0;
+    style.top = headerOffset + rh.slice(0, dataRow).reduce((a, b) => a + b, 0);
   }
   if (isRowNum) {
     style.left = 0;
   } else if (isFrozenCol) {
-    style.left = ROW_NUM_WIDTH + cw.slice(0, dataCol).reduce((a, b) => a + b, 0);
+    // When headers are hidden there is no row-number column consuming space at left
+    const rowNumOffset = headersVisible ? ROW_NUM_WIDTH : 0;
+    style.left = rowNumOffset + cw.slice(0, dataCol).reduce((a, b) => a + b, 0);
   }
   if (stickyV && stickyH) style.zIndex = 3;
   else if (isHeaderRow || isRowNum) style.zIndex = 2;
   else style.zIndex = 1;
   return style;
+}
+
+// Box-shadow that makes scrolling content appear to slide underneath frozen panes.
+// right=true  → shadow on the right edge  (last frozen col / row-number col)
+// bottom=true → shadow on the bottom edge (last frozen row / header row)
+function frozenEdgeShadow(right: boolean, bottom: boolean): React.CSSProperties {
+  const parts: string[] = [];
+  if (right)  parts.push('4px 0 8px -2px rgba(0,0,0,0.18)');
+  if (bottom) parts.push('0 4px 8px -2px rgba(0,0,0,0.18)');
+  return parts.length ? { boxShadow: parts.join(', ') } : {};
 }
 
 function cellBorderInlineStyle(borders: CellBorders): React.CSSProperties {
@@ -153,7 +172,7 @@ function cellBorderInlineStyle(borders: CellBorders): React.CSSProperties {
   return result;
 }
 
-export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }: VirtualGridProps) {
+export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store, conditionalRules, locked = false, tableBorderStyle = 'all' }: VirtualGridProps) {
   // ── Selection ──────────────────────────────────────────────────────────────
   const [selectedCells, setSelectedCells] = useState<Set<CellId>>(new Set());
   const [tick, setTick] = useState(0);
@@ -220,6 +239,11 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
     });
     setLocalFC(freezeColumns);
   }, [columns, freezeColumns]);
+
+  // Clear selection immediately when locked so no cell stays highlighted
+  useEffect(() => {
+    if (locked) setSelectedCells(new Set());
+  }, [locked]);
 
   // ── Store subscription ────────────────────────────────────────────────────
   useEffect(() => store.subscribe(() => setTick((t) => t + 1)), [store]);
@@ -299,6 +323,7 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
     }
 
     function onPaste(e: ClipboardEvent) {
+      if (locked) return;
       if ((document.activeElement as HTMLElement | null)?.classList?.contains('vg-data-cell')) return;
       const sel = selectedCellsRef.current;
       if (sel.size === 0) return;
@@ -386,6 +411,7 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
   function handleCellClick(e: React.MouseEvent, cellId: CellId) {
     e.stopPropagation();
     setContextMenu(null);
+    if (locked) return;
 
     // Formula pick mode: insert ref into formula cell
     if (formulaEditingCell && formulaEditingCell !== cellId) {
@@ -464,6 +490,7 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
   function handleColContextMenu(e: React.MouseEvent, col: number) {
     e.preventDefault();
     e.stopPropagation();
+    if (locked) return;
     const x = Math.min(e.clientX, window.innerWidth - 200);
     const y = Math.min(e.clientY, window.innerHeight - 180);
     setContextMenu({ type: 'col', index: col, x: Math.max(0, x), y: Math.max(0, y) });
@@ -472,6 +499,7 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
   function handleRowContextMenu(e: React.MouseEvent, row: number) {
     e.preventDefault();
     e.stopPropagation();
+    if (locked) return;
     const x = Math.min(e.clientX, window.innerWidth - 200);
     const y = Math.min(e.clientY, window.innerHeight - 210);
     setContextMenu({ type: 'row', index: row, x: Math.max(0, x), y: Math.max(0, y) });
@@ -597,104 +625,129 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
   // ── Build grid cells ───────────────────────────────────────────────────────
   const gridCells: React.ReactElement[] = [];
 
-  // Corner cell
-  gridCells.push(
-    <div
-      key="corner"
-      className="vg-cell vg-header-cell vg-corner-cell"
-      style={{ gridRow: 1, gridColumn: 1, ...stickyStyle(true, true, -1, -1, localFR, localFC, colWidths, rowHeights) }}
-      onClick={handleCornerClick}
-    />,
-  );
-
-  // Column header cells (all columns — bounded by localCols config ≤ 100)
-  for (let col = 0; col < localCols; col++) {
+  // Corner cell + column headers — hidden in locked mode
+  if (!locked) {
     gridCells.push(
       <div
-        key={`H${col}`}
-        className="vg-cell vg-header-cell"
-        style={{
-          gridRow: 1,
-          gridColumn: col + 2,
-          position: 'relative',
-          ...stickyStyle(true, false, -1, col, localFR, localFC, colWidths, rowHeights),
-        }}
-        onClick={(e) => handleColHeaderClick(e, col)}
-        onContextMenu={(e) => handleColContextMenu(e, col)}
-      >
-        {colLetter(col)}
-        <div
-          className="vg-resize-handle vg-resize-handle--col"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-            resizingRef.current = {
-              type: 'col', index: col,
-              startPos: e.clientX, startSize: colWidths[col] ?? COL_WIDTH,
-            };
-          }}
-        />
-      </div>,
+        key="corner"
+        className="vg-cell vg-header-cell vg-corner-cell"
+        style={{ gridRow: 1, gridColumn: 1, ...stickyStyle(true, true, -1, -1, localFR, localFC, colWidths, rowHeights), ...frozenEdgeShadow(true, true) }}
+        onClick={handleCornerClick}
+      />,
     );
+
+    for (let col = 0; col < localCols; col++) {
+      gridCells.push(
+        <div
+          key={`H${col}`}
+          className="vg-cell vg-header-cell"
+          style={{
+            gridRow: 1,
+            gridColumn: col + 2,
+            position: 'relative',
+            ...stickyStyle(true, false, -1, col, localFR, localFC, colWidths, rowHeights),
+            ...frozenEdgeShadow(localFC > 0 && col === localFC - 1, true),
+          }}
+          onClick={(e) => handleColHeaderClick(e, col)}
+          onContextMenu={(e) => handleColContextMenu(e, col)}
+        >
+          {colLetter(col)}
+          <div
+            className="vg-resize-handle vg-resize-handle--col"
+            onMouseDown={(e) => {
+              if (locked) return;
+              e.preventDefault();
+              e.stopPropagation();
+              document.body.style.cursor = 'col-resize';
+              document.body.style.userSelect = 'none';
+              resizingRef.current = {
+                type: 'col', index: col,
+                startPos: e.clientX, startSize: colWidths[col] ?? COL_WIDTH,
+              };
+            }}
+          />
+        </div>,
+      );
+    }
   }
 
   // Data rows — only visible rows (rowSet)
   for (const row of rowSet) {
     const rh = rowHeights[row] ?? ROW_HEIGHT;
 
-    // Row number cell
-    gridCells.push(
-      <div
-        key={`RN${row}`}
-        className="vg-cell vg-rownum-cell"
-        style={{
-          gridRow: row + 2,
-          gridColumn: 1,
-          position: 'relative',
-          height: rh,
-          ...stickyStyle(false, true, row, -1, localFR, localFC, colWidths, rowHeights),
-        }}
-        onClick={(e) => handleRowHeaderClick(e, row)}
-        onContextMenu={(e) => handleRowContextMenu(e, row)}
-      >
-        {row + 1}
+    // Row number cell — hidden in locked mode
+    if (!locked) {
+      gridCells.push(
         <div
-          className="vg-resize-handle vg-resize-handle--row"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            document.body.style.cursor = 'row-resize';
-            document.body.style.userSelect = 'none';
-            resizingRef.current = {
-              type: 'row', index: row,
-              startPos: e.clientY, startSize: rh,
-            };
+          key={`RN${row}`}
+          className="vg-cell vg-rownum-cell"
+          style={{
+            gridRow: row + 2,
+            gridColumn: 1,
+            position: 'relative',
+            height: rh,
+            ...stickyStyle(false, true, row, -1, localFR, localFC, colWidths, rowHeights),
+            ...frozenEdgeShadow(true, localFR > 0 && row === localFR - 1),
           }}
-        />
-      </div>,
-    );
+          onClick={(e) => handleRowHeaderClick(e, row)}
+          onContextMenu={(e) => handleRowContextMenu(e, row)}
+        >
+          {row + 1}
+          <div
+            className="vg-resize-handle vg-resize-handle--row"
+            onMouseDown={(e) => {
+              if (locked) return;
+              e.preventDefault();
+              e.stopPropagation();
+              document.body.style.cursor = 'row-resize';
+              document.body.style.userSelect = 'none';
+              resizingRef.current = {
+                type: 'row', index: row,
+                startPos: e.clientY, startSize: rh,
+              };
+            }}
+          />
+        </div>,
+      );
+    }
+
+    // When locked: grid starts at row 1 / col 1 (no header row or row-num column)
+    const gridRowOffset = locked ? 1 : 2;
+    const gridColOffset = locked ? 1 : 2;
 
     // Data cells — only visible columns (colSet)
     for (const col of colSet) {
       const cellId: CellId = `R${row}C${col}`;
       const fmt = store.getFormat(cellId);
+      const cfPatch = evaluateConditionalRules(getDisplayValue(cellId, store), conditionalRules, row, col);
+
+      // In locked mode headers are absent so the first row/col have no outer border.
+      // Add border-top on row 0 when horizontal lines are visible (all | rows),
+      // and border-left on col 0 when vertical lines are visible (all | columns).
+      const lockedTopBorder: React.CSSProperties =
+        locked && row === 0 && (tableBorderStyle === 'all' || tableBorderStyle === 'rows')
+          ? { borderTop: '1px solid var(--border-gray-default, #c4c4c4)' } : {};
+      const lockedLeftBorder: React.CSSProperties =
+        locked && col === 0 && (tableBorderStyle === 'all' || tableBorderStyle === 'columns')
+          ? { borderLeft: '1px solid var(--border-gray-default, #c4c4c4)' } : {};
 
       const cellInlineStyle: React.CSSProperties = {
-        gridRow: row + 2,
-        gridColumn: col + 2,
+        gridRow: row + gridRowOffset,
+        gridColumn: col + gridColOffset,
         height: rh,
         lineHeight: `${rh}px`,
-        fontWeight: fmt.bold ? 'bold' : 'normal',
-        fontStyle: fmt.italic ? 'italic' : 'normal',
+        fontWeight: cfPatch.bold != null ? (cfPatch.bold ? 'bold' : 'normal') : (fmt.bold ? 'bold' : 'normal'),
+        fontStyle: cfPatch.italic != null ? (cfPatch.italic ? 'italic' : 'normal') : (fmt.italic ? 'italic' : 'normal'),
         textDecoration: fmt.underline ? 'underline' : 'none',
         fontSize: fmt.fontSize,
         textAlign: fmt.textAlign,
-        color: fmt.textColor || undefined,
-        backgroundColor: fmt.cellColor || undefined,
+        color: cfPatch.textColor ?? (fmt.textColor || undefined),
+        backgroundColor: cfPatch.cellColor ?? (fmt.cellColor || undefined),
+        ...lockedTopBorder,
+        ...lockedLeftBorder,
         ...cellBorderInlineStyle(fmt.borders),
-        ...stickyStyle(false, false, row, col, localFR, localFC, colWidths, rowHeights),
+        ...stickyStyle(false, false, row, col, localFR, localFC, colWidths, rowHeights, !locked),
+        ...frozenEdgeShadow(localFC > 0 && col === localFC - 1, localFR > 0 && row === localFR - 1),
         ...(formulaEditingCell !== null && formulaEditingCell !== cellId ? { cursor: 'cell' } : {}),
       };
 
@@ -714,7 +767,7 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
           key={cellId}
           className={classNames}
           style={cellInlineStyle}
-          contentEditable
+          contentEditable={!locked}
           suppressContentEditableWarning
           ref={(el: HTMLDivElement | null) => {
             if (el) {
@@ -728,6 +781,8 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
             }
           }}
           onMouseDown={(e) => {
+            // Locked: always prevent browser focus — selection still works via click
+            if (locked) { e.preventDefault(); return; }
             // Formula pick mode: keep focus on the formula cell
             if (formulaEditingCell && formulaEditingCell !== cellId) {
               e.preventDefault();
@@ -742,7 +797,7 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
           onClick={(e) => handleCellClick(e, cellId)}
           onDoubleClick={(e) => {
             e.stopPropagation();
-            enterEditMode(cellId);
+            if (!locked) enterEditMode(cellId);
           }}
           onFocus={(e) => {
             // Content is set by enterEditMode; just detect formula mode from current content
@@ -807,8 +862,13 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
   }
 
   // ── Grid template strings ─────────────────────────────────────────────────
-  const gridTemplateColumns = `${ROW_NUM_WIDTH}px ${colWidths.slice(0, localCols).map((w) => `${w}px`).join(' ')}`;
-  const gridTemplateRows    = `${ROW_HEIGHT}px ${rowHeights.slice(0, localRows).map((h) => `${h}px`).join(' ')}`;
+  // In locked mode headers are hidden: no row-num column and no header row in the template
+  const gridTemplateColumns = locked
+    ? colWidths.slice(0, localCols).map((w) => `${w}px`).join(' ')
+    : `${ROW_NUM_WIDTH}px ${colWidths.slice(0, localCols).map((w) => `${w}px`).join(' ')}`;
+  const gridTemplateRows = locked
+    ? rowHeights.slice(0, localRows).map((h) => `${h}px`).join(' ')
+    : `${ROW_HEIGHT}px ${rowHeights.slice(0, localRows).map((h) => `${h}px`).join(' ')}`;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -816,8 +876,8 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
       className="vg-root"
       onClick={() => { setSelectedCells(new Set()); setContextMenu(null); }}
     >
-      {/* ── Formatting toolbar — always rendered to avoid layout shift ── */}
-      <div
+      {/* ── Formatting toolbar — not rendered at all when locked ── */}
+      {!locked && <div
         className={`vg-toolbar${hasSelection ? '' : ' vg-toolbar--hidden'}`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -874,12 +934,10 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
         >
           <PopoverHeader title="Text Color" showClose />
           <PopoverBody>
-            <div className="vg-color-picker-wrap">
-              <ColorPicker
-                selectedColor={currentTextColor || '#1a1a1a'}
-                onColorSelect={(color) => applyFmt({ textColor: color })}
-              />
-            </div>
+            <CompactColorPicker
+              value={currentTextColor || '#1a1a1a'}
+              onChange={(color) => applyFmt({ textColor: color })}
+            />
           </PopoverBody>
         </Popover>
 
@@ -901,12 +959,10 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
         >
           <PopoverHeader title="Fill Color" showClose />
           <PopoverBody>
-            <div className="vg-color-picker-wrap">
-              <ColorPicker
-                selectedColor={currentCellColor || '#ffffff'}
-                onColorSelect={(color) => applyFmt({ cellColor: color })}
-              />
-            </div>
+            <CompactColorPicker
+              value={currentCellColor || '#ffffff'}
+              onChange={(color) => applyFmt({ cellColor: color })}
+            />
           </PopoverBody>
         </Popover>
 
@@ -976,12 +1032,10 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
               >
                 <PopoverHeader title="Border Color" showClose />
                 <PopoverBody>
-                  <div className="vg-color-picker-wrap">
-                    <ColorPicker
-                      selectedColor={borderConfig.color}
-                      onColorSelect={(color) => setBorderConfig((c) => ({ ...c, color }))}
-                    />
-                  </div>
+                  <CompactColorPicker
+                    value={borderConfig.color}
+                    onChange={(color) => setBorderConfig((c) => ({ ...c, color }))}
+                  />
                 </PopoverBody>
               </Popover>
 
@@ -989,18 +1043,20 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
           </PopoverBody>
         </Popover>
 
-      </div>
+      </div>}
 
-      {/* ── Formula bar ── */}
-      <div className="vg-formula-bar" onClick={(e) => e.stopPropagation()}>
-        <div className="vg-formula-bar__name">{activeRef}</div>
-        <span className="vg-formula-bar__fx">ƒx</span>
-        <div className={`vg-formula-bar__content${formulaEditingCell ? ' vg-formula-bar__content--picking' : ''}`}>
-          {formulaEditingCell
-            ? 'Click a cell to insert its reference'
-            : hasSelection ? store.getValue(selectedArr[0]) : ''}
+      {/* ── Formula bar — not rendered at all when locked ── */}
+      {!locked && (
+        <div className="vg-formula-bar" onClick={(e) => e.stopPropagation()}>
+          <div className="vg-formula-bar__name">{activeRef}</div>
+          <span className="vg-formula-bar__fx">ƒx</span>
+          <div className={`vg-formula-bar__content${formulaEditingCell ? ' vg-formula-bar__content--picking' : ''}`}>
+            {formulaEditingCell
+              ? 'Click a cell to insert its reference'
+              : hasSelection ? store.getValue(selectedArr[0]) : ''}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Grid ── */}
       <div
@@ -1011,7 +1067,7 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
           if (document.activeElement !== gridWrapRef.current) return;
           const id = [...selectedCells][0];
 
-          if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          if (!locked && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
             e.preventDefault();
             if (!id) return;
             const m = /^R(\d+)C(\d+)$/.exec(id)!;
@@ -1026,13 +1082,13 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
             setSelectedCells(new Set([nextId]));
             rowVirt.scrollToIndex(r, { align: 'auto' });
             colVirt.scrollToIndex(c, { align: 'auto' });
-          } else if (e.key === 'Enter' || e.key === 'F2') {
+          } else if (!locked && (e.key === 'Enter' || e.key === 'F2')) {
             e.preventDefault();
             if (id) enterEditMode(id);
-          } else if (e.key === 'Backspace' || e.key === 'Delete') {
+          } else if (!locked && (e.key === 'Backspace' || e.key === 'Delete')) {
             e.preventDefault();
             [...selectedCells].forEach((sid) => store.setValue(sid, ''));
-          } else if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
+          } else if (!locked && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
             // Printable char: enter edit mode with that character (overwrites)
             if (id) {
               e.preventDefault();
@@ -1042,7 +1098,7 @@ export function VirtualGrid({ rows, columns, freezeRows, freezeColumns, store }:
         }}
       >
         <div
-          className="vg-grid"
+          className={`vg-grid vg-grid--border-${tableBorderStyle}`}
           style={{ gridTemplateColumns, gridTemplateRows }}
         >
           {gridCells}

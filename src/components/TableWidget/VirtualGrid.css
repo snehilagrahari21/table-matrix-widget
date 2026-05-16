@@ -312,6 +312,18 @@
   outline: none;
 }
 
+/* table border style overrides — applied on the vg-grid, not the wrapper */
+.vg-grid--border-none .vg-data-cell {
+  border-right: none;
+  border-bottom: none;
+}
+.vg-grid--border-rows .vg-data-cell {
+  border-right: none;
+}
+.vg-grid--border-columns .vg-data-cell {
+  border-bottom: none;
+}
+
 /* ── CSS Grid ── */
 .vg-grid {
   display: grid;
